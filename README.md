@@ -14,7 +14,7 @@
 После настройки конфигурации откройте терминал и выполните следующую команду для сборки и запуска контейнеров с помощью Docker Compose:
 
 ```bash
-sudo docker-compose up --build
+sudo docker-compose -f docker/docker-compose.yml up --build
 ```
 
 ### 3. Протестируйте программу
