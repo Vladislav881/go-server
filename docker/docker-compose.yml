@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: postgres
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  liquibase:
+    image: liquibase/liquibase:latest
+    container_name: liquibase
+    depends_on:
+      - postgres
+    volumes:
+      - ../data-base/changelog:/liquibase/changelog
+    environment:
+      LIQUIBASE_COMMAND_UPDATE: "true"
+      LIQUIBASE_COMMAND_URL: "jdbc:postgresql://postgres:5432/postgres"
+      LIQUIBASE_COMMAND_USERNAME: "postgres"
+      LIQUIBASE_COMMAND_PASSWORD: "mysecretpassword"
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: "changelog/changelog.xml"
+    entrypoint: [ "liquibase", "update" ]
+
+  url-shortener:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: url-shortener
+    restart: always
+    depends_on:
+      - liquibase
+    environment:
+      ENV: "local"
+      STORAGE_TYPE: "postgres"
+      STORAGE_PATH: "host=postgres port=5432 user=postgres password=mysecretpassword dbname=postgres sslmode=disable"
+      HTTP_SERVER_ADDRESS: "0.0.0.0:8080"
+      HTTP_SERVER_TIMEOUT: "4s"
+      HTTP_SERVER_IDLE_TIMEOUT: "60s"
+    ports:
+      - "8080:8080"
+
+
+volumes:
+  postgres_data:
